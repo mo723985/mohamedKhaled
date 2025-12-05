@@ -3,883 +3,1916 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة مشتركي شبكة الرسيفر - نظام بسيط</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <title>نظام إدارة الاشتراكات (Web-Only)</title>
     <style>
-        /* ===================================== */
-        /* تاسعاً: شكل الواجهة (UI/UX)  */
-        /* ===================================== */
         :root {
             --primary-color: #007bff;
             --secondary-color: #6c757d;
             --success-color: #28a745;
             --danger-color: #dc3545;
             --warning-color: #ffc107;
+            --info-color: #17a2b8;
             --light-bg: #f8f9fa;
-            --dark-bg: #343a40;
-            --text-color: #212529;
+            --dark-text: #343a40;
             --border-color: #dee2e6;
-            --header-bg: #e9ecef;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
+            font-family: var(--font-family);
+            margin: 0;
             background-color: var(--light-bg);
-            color: var(--text-color);
-            line-height: 1.6;
+            color: var(--dark-text);
+            text-align: right; /* Default text alignment for RTL */
         }
 
+        /* General Layout & Utility */
         .container {
             max-width: 1200px;
             margin: 20px auto;
             padding: 0 15px;
         }
 
-        /* 🔐 أولاً: صفحة كلمة السر */
-        #auth-page {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--dark-bg); /* خلفية سوداء */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-        }
-
-        .auth-box {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
-
-        .auth-box input[type="password"] {
+        .alert {
             padding: 10px;
             margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            width: 250px;
+            border-radius: 5px;
             text-align: center;
         }
 
-        .auth-box button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+        .alert-danger { background-color: #f8d7da; color: var(--danger-color); border: 1px solid #f5c6cb; }
+        .alert-success { background-color: #d4edda; color: var(--success-color); border: 1px solid #c3e6cb; }
+        .alert-warning { background-color: #fff3cd; color: var(--warning-color); border: 1px solid #ffeeba; }
 
-        .auth-box button:hover {
-            background-color: #0056b3;
-        }
-
-        /* لوحة التحكم الرئيسية */
-        #dashboard-page {
-            display: none; /* يتم إظهارها بواسطة JS بعد تسجيل الدخول */
-        }
-
-        /* 📊 خامساً: الإحصائيات الشهرية */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-            text-align: right;
-        }
-
-        .stat-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border-right: 5px solid var(--primary-color);
-        }
-
-        .stat-card h3 {
-            font-size: 1.2rem;
-            color: var(--secondary-color);
-            margin-bottom: 5px;
-        }
-
-        .stat-card p {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        /* 📌 ثانياً: شريط الأدوات العلوي */
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: var(--header-bg);
-            border-radius: 8px;
-        }
-
-        .toolbar h2 {
-            font-size: 1.5rem;
-            margin: 0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .toolbar button {
-            margin-right: 10px;
-        }
-
-        /* أزرار عامة */
+        /* Buttons */
         .btn {
-            padding: 10px 15px;
+            padding: 8px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: opacity 0.3s;
-            font-weight: 700;
-            white-space: nowrap;
+            transition: background-color 0.2s;
+            margin-left: 5px; /* Spacing between buttons */
+            font-size: 14px;
         }
 
-        .btn:hover {
-            opacity: 0.9;
-        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
 
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: #bd2130; }
 
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #1e7e34; }
 
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-secondary:hover { background-color: #545b62; }
 
-        .btn-secondary {
-            background-color: var(--secondary-color);
-            color: white;
-        }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: var(--text-color);
-        }
-
-        /* حقول البحث والإدخال */
-        #search, .input-field {
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            margin-right: 10px;
-            width: 250px;
-        }
-
+        /* Forms */
         .form-group {
             margin-bottom: 15px;
         }
 
-        /* جدول المشتركين */
-        .table-container {
-            overflow-x: auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .clients-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: right;
-        }
-
-        .clients-table th, .clients-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .clients-table th {
-            background-color: var(--header-bg);
-            font-weight: 700;
-            color: var(--dark-bg);
-        }
-
-        .clients-table tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .actions-cell button {
-            margin: 5px;
-        }
-
-        /* 💰 رابعاً: زر الدفع */
-        .payment-status-btn {
-            width: 100px;
-            text-align: center;
-        }
-
-        .paid {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .late {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        /* المودال (النوافذ المنبثقة) */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 28px;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
             font-weight: bold;
         }
 
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
+        .form-control, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
 
-        /* سجل التاريخ في المودال */
-        #history-table {
+        textarea {
+            resize: vertical;
+        }
+
+        /* Tables */
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
             text-align: right;
         }
 
-        #history-table th, #history-table td {
-            border: 1px solid var(--border-color);
-            padding: 8px;
+        .data-table th {
+            background-color: var(--info-color);
+            color: white;
+            font-weight: bold;
         }
 
-        #history-table th {
-            background-color: var(--header-bg);
+        .data-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Navigation */
+        .navbar {
+            background-color: var(--dark-text);
+            padding: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .nav-item a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+            transition: background-color 0.2s;
+        }
+
+        .nav-item a:hover, .nav-item a.active {
+            background-color: #495057;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 10px 15px;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .logout-btn:hover {
+            color: var(--danger-color);
+        }
+
+        /* Section Display */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .content-section {
+            display: none; /* Hide all sections by default */
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            flex: 1 1 calc(33.333% - 20px);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .card h4 {
+            margin-top: 0;
+            color: var(--secondary-color);
+            font-size: 16px;
+        }
+
+        .card p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0 0;
+        }
+        
+        /* Monthly Payments Specific */
+        #payment-stats .card {
+             flex: 1 1 calc(25% - 20px);
+             min-width: 200px;
+        }
+        
+        .paid-checkbox {
+            transform: scale(1.5);
+            cursor: pointer;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #login-form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 350px;
+            text-align: center;
+        }
+        
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .navbar-nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .nav-item a {
+                text-align: center;
+            }
+            .card {
+                flex: 1 1 100%;
+            }
+            #payment-stats .card {
+                 flex: 1 1 100%;
+            }
+            .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr { 
+                display: block; 
+            }
+            .data-table thead tr { 
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            .data-table tr { border: 1px solid #ccc; margin-bottom: 10px; }
+            .data-table td { 
+                border: none;
+                border-bottom: 1px solid #eee; 
+                position: relative;
+                padding-right: 50%; /* Adjust for label */
+                text-align: right;
+            }
+            .data-table td:before { 
+                /* Mobile column labels - customize for each table */
+                position: absolute;
+                top: 6px;
+                right: 6px;
+                width: 45%; 
+                padding-left: 10px; 
+                white-space: nowrap;
+                font-weight: bold;
+                content: attr(data-label);
+                text-align: right;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div id="auth-page">
-        <div class="auth-box">
-            <h2>نظام إدارة المشتركين</h2>
-            <p>الرجاء إدخال كلمة السر للدخول:</p>
-            <input type="password" id="password-input" placeholder="كلمة السر">
-            <button onclick="checkPassword()">دخول</button>
-        </div>
-    </div>
-
-    <div id="dashboard-page" class="container">
-
-        <h1>لوحة تحكم المشتركين</h1>
-        <p>الشهر الحالي: <strong id="current-month-display"></strong></p>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>عدد المشتركين الكلي</h3>
-                <p id="total-clients-stat">0</p>
-            </div>
-            <div class="stat-card" style="border-right-color: var(--warning-color);">
-                <h3>إجمالي المتوقع (60 ج.م/مشترك)</h3>
-                <p id="expected-revenue-stat">0 ج.م</p>
-            </div>
-            <div class="stat-card" style="border-right-color: var(--success-color);">
-                <h3>إجمالي المحصل هذا الشهر</h3>
-                <p id="collected-revenue-stat">0 ج.م</p>
-            </div>
-            <div class="stat-card" style="border-right-color: var(--danger-color);">
-                <h3>عدد المتأخرين</h3>
-                <p id="late-clients-stat">0</p>
-            </div>
-        </div>
-        
-        <hr>
-
-        <div class="toolbar">
-            <div class="actions">
-                <button class="btn btn-success" onclick="openAddClientModal()">+ إضافة مشترك جديد</button>
-                <input type="text" id="search" placeholder="بحث بالاسم أو الرقم..." onkeyup="filterClients()">
-                <button id="toggle-late-btn" class="btn btn-warning" onclick="toggleLateFilter()">عرض المتأخرين فقط</button>
-            </div>
-            <div class="system-controls">
-                 <button class="btn btn-primary" onclick="startNewMonth()">ابدأ شهر جديد</button>
-                <button class="btn btn-secondary" onclick="exportData('json')">تصدير (JSON)</button>
-                <button class="btn btn-secondary" onclick="exportData('csv')">تصدير (CSV)</button>
-                <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)">
-                <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">استيراد (JSON)</button>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <table class="clients-table">
-                <thead>
-                    <tr>
-                        <th>الاسم</th>
-                        <th>رقم الهاتف</th>
-                        <th>الحالة</th>
-                        <th class="actions-cell">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="clients-table-body">
-                    </tbody>
-            </table>
-        </div>
-
-    </div>
-
-    <div id="client-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">إضافة مشترك جديد</h3>
-                <span class="close" onclick="closeModal('client-modal')">&times;</span>
-            </div>
-            <form id="client-form" onsubmit="saveClient(event)">
-                <input type="hidden" id="client-id">
+    <div id="login-overlay">
+        <div id="login-form-container">
+            <h2>تسجيل الدخول</h2>
+            <div id="login-message" class="alert alert-danger" style="display: none;"></div>
+            <form id="login-form">
                 <div class="form-group">
-                    <label for="client-name">الاسم:</label>
-                    <input type="text" id="client-name" class="input-field" required>
+                    <label for="password-input">كلمة السر:</label>
+                    <input type="password" id="password-input" class="form-control" required>
                 </div>
-                <div class="form-group">
-                    <label for="client-phone">رقم الهاتف:</label>
-                    <input type="text" id="client-phone" class="input-field" required>
-                </div>
-                <button type="submit" class="btn btn-primary" id="save-client-btn">حفظ</button>
+                <button type="submit" class="btn btn-primary">دخول</button>
             </form>
         </div>
     </div>
 
-    <div id="history-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="history-modal-title">سجل مدفوعات المشترك: <span id="client-history-name"></span></h3>
-                <span class="close" onclick="closeModal('history-modal')">&times;</span>
+    <div id="app-content" style="display: none;">
+
+        <nav class="navbar">
+            <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a href="#" onclick="showSection('dashboard', this)">الرئيسية 🏠</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('clients', this)">العملاء 👤</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('packages', this)">الباقات 📦</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('groups', this)">المجموعات 👥</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('payments', this)">الدفع الشهري 💰</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('debtors', this)">المتأخرين 🚨</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('reports', this)">التقارير 📊</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('settings', this)">الإعدادات ⚙️</a></li>
+                    <li class="nav-item"><a href="#" onclick="showSection('backup', this)">نسخ احتياطي 💾</a></li>
+                </ul>
+                <button class="logout-btn" onclick="logout()">خروج 🚪</button>
             </div>
-            <table id="history-table">
-                <thead>
-                    <tr>
-                        <th>الشهر</th>
-                        <th>الحالة</th>
-                        <th>المبلغ</th>
-                        <th>تاريخ الدفع</th>
-                    </tr>
-                </thead>
-                <tbody id="history-table-body">
-                    </tbody>
-            </table>
+        </nav>
+
+        <div class="container">
+            
+            <section id="dashboard" class="content-section">
+                <div class="section-header">
+                    <h2>الرئيسية</h2>
+                </div>
+                <div class="alert alert-info">مرحباً بك في نظام إدارة الاشتراكات.</div>
+                <div id="dashboard-stats" class="dashboard-cards">
+                    </div>
+            </section>
+
+            <section id="clients" class="content-section">
+                <div class="section-header">
+                    <h2>إدارة العملاء</h2>
+                    <button class="btn btn-primary" onclick="resetClientForm()">+ عميل جديد</button>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <input type="text" id="client-search" class="form-control" placeholder="بحث بالاسم أو الرقم..." style="flex: 1;">
+                    <select id="client-status-filter" class="form-control" style="width: 150px;">
+                        <option value="all">كل العملاء</option>
+                        <option value="active">النشطون</option>
+                        <option value="inactive">الموقوفون</option>
+                    </select>
+                    <select id="client-group-filter" class="form-control" style="width: 150px;">
+                        <option value="all">كل المجموعات</option>
+                        </select>
+                </div>
+
+                <div id="client-form-container" style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: none;">
+                    <h3>إضافة/تعديل عميل</h3>
+                    <form id="client-form">
+                        <input type="hidden" id="client-id">
+                        <div class="form-group">
+                            <label for="client-name">الاسم:</label>
+                            <input type="text" id="client-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="client-phone">الرقم (للإتصال):</label>
+                            <input type="tel" id="client-phone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="client-package">الباقة:</label>
+                            <select id="client-package" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="client-group">المجموعة:</label>
+                            <select id="client-group" class="form-control" required></select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="client-active" style="transform: scale(1.2);">
+                            <label for="client-active" style="margin-bottom: 0;">نشط</label>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="client-form-submit-btn">إضافة</button>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('client-form-container').style.display='none';">إلغاء</button>
+                    </form>
+                </div>
+
+                <table id="clients-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الرقم</th>
+                            <th>الباقة</th>
+                            <th>المجموعة</th>
+                            <th>الحالة</th>
+                            <th>تاريخ الإضافة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </section>
+
+            <section id="packages" class="content-section">
+                <div class="section-header">
+                    <h2>إدارة الباقات</h2>
+                    <button class="btn btn-primary" onclick="resetPackageForm()">+ باقة جديدة</button>
+                </div>
+                
+                <div id="package-form-container" style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: none;">
+                    <h3>إضافة/تعديل باقة</h3>
+                    <form id="package-form">
+                        <input type="hidden" id="package-id">
+                        <div class="form-group">
+                            <label for="package-name">اسم الباقة:</label>
+                            <input type="text" id="package-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="package-net">الإنترنت (جيجا):</label>
+                            <input type="number" id="package-net" class="form-control" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="package-minutes">الدقائق:</label>
+                            <input type="number" id="package-minutes" class="form-control" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="package-price">السعر الشهري:</label>
+                            <input type="number" id="package-price" class="form-control" min="0" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="package-notes">ملاحظات:</label>
+                            <textarea id="package-notes" class="form-control"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="package-form-submit-btn">إضافة</button>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('package-form-container').style.display='none';">إلغاء</button>
+                    </form>
+                </div>
+
+                <table id="packages-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>الاسم</th>
+                            <th>الإنترنت (جيجا)</th>
+                            <th>الدقائق</th>
+                            <th>السعر</th>
+                            <th>ملاحظات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </section>
+            
+            <section id="groups" class="content-section">
+                <div class="section-header">
+                    <h2>إدارة المجموعات</h2>
+                    <button class="btn btn-primary" onclick="resetGroupForm()">+ مجموعة جديدة</button>
+                </div>
+
+                <div id="group-form-container" style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: none;">
+                    <h3>إضافة/تعديل مجموعة</h3>
+                    <form id="group-form">
+                        <input type="hidden" id="group-id">
+                        <div class="form-group">
+                            <label for="group-name">اسم المجموعة:</label>
+                            <input type="text" id="group-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="group-phone">هاتف مسؤول المجموعة:</label>
+                            <input type="tel" id="group-phone" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-success" id="group-form-submit-btn">إضافة</button>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('group-form-container').style.display='none';">إلغاء</button>
+                    </form>
+                </div>
+
+                <table id="groups-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>الاسم</th>
+                            <th>هاتف المسؤول</th>
+                            <th>عدد العملاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </section>
+
+
+            <section id="payments" class="content-section">
+                <div class="section-header">
+                    <h2>الدفع الشهري</h2>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <label for="payment-month">الشهر:</label>
+                    <input type="number" id="payment-month" class="form-control" min="1" max="12" style="width: 80px;" onchange="renderPayments()">
+                    <label for="payment-year">السنة:</label>
+                    <input type="number" id="payment-year" class="form-control" style="width: 100px;" onchange="renderPayments()">
+                    <button class="btn btn-primary" onclick="createMonthlyRecords()">إنشاء شهر جديد</button>
+                </div>
+                
+                <div id="payment-message" class="alert" style="display: none;"></div>
+                
+                <div id="payment-stats" class="dashboard-cards">
+                    <div class="card bg-info"><h4>الإجمالي المتوقع</h4><p id="stat-expected">0.00</p></div>
+                    <div class="card bg-success"><h4>الإجمالي المدفوع</h4><p id="stat-paid">0.00</p></div>
+                    <div class="card bg-danger"><h4>الإجمالي المتأخر</h4><p id="stat-due">0.00</p></div>
+                    <div class="card bg-warning"><h4>نسبة التحصيل</h4><p id="stat-ratio">0%</p></div>
+                </div>
+
+                <table id="payments-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الباقة</th>
+                            <th>الرقم</th>
+                            <th>المبلغ الأصلي</th>
+                            <th>الخصم</th>
+                            <th>المبلغ النهائي</th>
+                            <th>تم الدفع؟</th>
+                            <th>ملاحظات</th>
+                            <th>رسالة SMS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </section>
+
+            <section id="debtors" class="content-section">
+                <div class="section-header">
+                    <h2>المتأخرين عن الدفع</h2>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <p><strong>قالب رسالة التذكير (SMS):</strong></p>
+                    <textarea id="sms-template-input" class="form-control" rows="3" onchange="saveSmsTemplate()"></textarea>
+                    <small>المتغيرات المدعومة: <mark>{{name}}</mark>, <mark>{{month}}</mark>, <mark>{{year}}</mark>, <mark>{{amount}}</mark>.</small>
+                    <button class="btn btn-secondary btn-sm" onclick="resetSmsTemplate()" style="margin-top: 5px;">إعادة القالب الافتراضي</button>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-danger" onclick="sendBulkSmsReminder()">
+                        إرسال رسالة لكل المتأخرين ⚠️
+                    </button>
+                    <p class="alert alert-info">
+                        ملاحظة: بعض الأجهزة لا تدعم إرسال رسائل جماعية في رابط SMS. سيتم استخدام صيغة الأرقام مفصولة بفواصل.
+                    </p>
+                </div>
+
+                <table id="debtors-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الرقم</th>
+                            <th>المبلغ المتأخر</th>
+                            <th>عدد التذكيرات</th>
+                            <th>آخر تذكير</th>
+                            <th>إرسال SMS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </section>
+            
+            <section id="backup" class="content-section">
+                <div class="section-header">
+                    <h2>النسخ الاحتياطي والاستعادة</h2>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3>تصدير البيانات (Backup)</h3>
+                    <p>قم بتنزيل ملف JSON يحتوي على جميع بيانات النظام.</p>
+                    <button class="btn btn-primary" onclick="exportDataToJSON()">تصدير JSON ⬇️</button>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px;">
+                    <h3>استيراد البيانات (Restore)</h3>
+                    <p class="alert alert-danger">تحذير: استيراد البيانات سيستبدل **جميع** البيانات الحالية!</p>
+                    <input type="file" id="import-file-input" accept="application/json" style="margin-bottom: 10px;">
+                    <button class="btn btn-danger" onclick="importDataFromInput()">استيراد JSON ⬆️</button>
+                </div>
+            </section>
+
+            <section id="settings" class="content-section">
+                <div class="section-header">
+                    <h2>الإعدادات</h2>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px;">
+                    <h3>تغيير كلمة السر</h3>
+                    <div id="password-message" class="alert" style="display: none;"></div>
+                    <form id="change-password-form" onsubmit="changePassword(event)">
+                        <div class="form-group">
+                            <label for="old-password">كلمة السر القديمة:</label>
+                            <input type="password" id="old-password" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">كلمة السر الجديدة:</label>
+                            <input type="password" id="new-password" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-new-password">تأكيد كلمة السر الجديدة:</label>
+                            <input type="password" id="confirm-new-password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">تغيير كلمة السر</button>
+                    </form>
+                </div>
+            </section>
+            
+            <section id="reports" class="content-section">
+                <div class="section-header">
+                    <h2>التقارير والإحصائيات</h2>
+                </div>
+
+                <div id="reports-stats" class="dashboard-cards">
+                    </div>
+                
+                <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 8px;">
+                    <h3>إحصائيات المجموعات</h3>
+                    <table id="group-reports-table" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>المجموعة</th>
+                                <th>عدد العملاء</th>
+                                <th>عملاء نشطون</th>
+                                <th>عملاء موقوفون</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 8px;">
+                    <h3>ملخص الدفع الشهري الحالي</h3>
+                    <div id="monthly-payment-summary">
+                        </div>
+                </div>
+                
+                </section>
+
         </div>
     </div>
-
+    
     <script>
-        // =====================================
-        //          عاشراً: تخزين البيانات
-        // =====================================
-        const STORAGE_KEY = 'receiver_clients_data';
-        const PASSWORD = '1999';
-        const MONTHLY_FEE = 60;
-        let isLateFilterActive = false;
-
-        // الهيكل الافتراضي للبيانات
-        const defaultData = {
-            clients: [],
-            currentMonth: getCurrentMonthKey() // "YYYY-MM"
+        // --- ⚙️ متغيرات وثوابت عامة -----------------------------------------------------------------------------------------------------------------------------------
+        
+        // مفاتيح localStorage
+        const STORAGE_KEYS = {
+            CLIENTS: 'clients',
+            PACKAGES: 'packages',
+            GROUPS: 'groups',
+            PAYMENTS: 'payments',
+            SMS_TEMPLATE: 'smsReminderTemplate',
+            PASSWORD: 'appPassword',
+            LOGGED_IN: 'loggedIn',
+            LAST_MONTH: 'lastSelectedMonth',
+            LAST_YEAR: 'lastSelectedYear'
         };
 
-        let systemData = loadData();
+        const DEFAULT_PASSWORD = 'admin123';
+        const DEFAULT_SMS_TEMPLATE = "عزيزي {{name}}، نرجو التكرم بدفع فاتورة اشتراك الشهر {{month}}/{{year}} بقيمة {{amount}}، شكراً لتعاونكم.";
+        
+        // بيانات افتراضية إذا كان localStorage فارغاً
+        const DUMMY_DATA = {
+            packages: [
+                { id: 1, name: "باقة 25 جيجا", net: 25, minutes: 100, price: 150.00, notes: "باقة قياسية" },
+                { id: 2, name: "باقة بلا حدود", net: 999, minutes: 500, price: 300.00, notes: "أفضل قيمة" }
+            ],
+            groups: [
+                { id: 101, name: "منطقة أ", phone: "0501234567" },
+                { id: 102, name: "منطقة ب", phone: "0507654321" }
+            ],
+            clients: [
+                { id: 1001, name: "أحمد محمد", phone: "0551112222", packageId: 1, groupId: 101, active: true, createdAt: new Date().toISOString() },
+                { id: 1002, name: "فاطمة سعيد", phone: "0563334444", packageId: 2, groupId: 102, active: true, createdAt: new Date().toISOString() },
+                { id: 1003, name: "خالد علي", phone: "0505556666", packageId: 1, groupId: 101, active: false, createdAt: new Date().toISOString() }
+            ]
+        };
 
-        function loadData() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (data) {
-                const parsedData = JSON.parse(data);
-                // التأكد من وجود currentMonth وتحديثه إذا كان الشهر الحالي أكبر
-                if (!parsedData.currentMonth || new Date(getCurrentMonthKey()) > new Date(parsedData.currentMonth)) {
-                     // هذه حالة غير متوقعة في النظام، لكن للتأكد من المزامنة
-                    parsedData.currentMonth = getCurrentMonthKey();
-                }
-                return parsedData;
+        // لترجمة الأشهر
+        const MONTH_NAMES = [
+            "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+        ];
+        
+        // --- 💾 دوال تخزين localStorage الأساسية ---------------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function getFromStorage
+         * @description يجلب البيانات من localStorage، يعيد مصفوفة فارغة أو قيمة افتراضية إذا لم يجد شيئاً.
+         * @param {string} key - مفتاح التخزين.
+         * @param {any} defaultValue - القيمة الافتراضية إذا لم يتم العثور على المفتاح.
+         * @returns {any} البيانات المخزنة أو القيمة الافتراضية.
+         */
+        function getFromStorage(key, defaultValue = []) {
+            const data = localStorage.getItem(key);
+            if (!data) return defaultValue;
+            try {
+                return JSON.parse(data);
+            } catch (e) {
+                console.error(`Error parsing localStorage key ${key}:`, e);
+                return defaultValue;
             }
-            return defaultData;
         }
 
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(systemData));
+        /**
+         * @function saveToStorage
+         * @description يحفظ البيانات إلى localStorage.
+         * @param {string} key - مفتاح التخزين.
+         * @param {any} data - البيانات المراد حفظها.
+         */
+        function saveToStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
         }
 
-        function getCurrentMonthKey(date = new Date()) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            return `${year}-${month}`;
+        /**
+         * @function initializeData
+         * @description تهيئة البيانات الافتراضية عند أول استخدام للتطبيق.
+         */
+        function initializeData() {
+            // تهيئة كلمة السر إذا لم تكن موجودة
+            if (!localStorage.getItem(STORAGE_KEYS.PASSWORD)) {
+                localStorage.setItem(STORAGE_KEYS.PASSWORD, DEFAULT_PASSWORD);
+            }
+
+            // تهيئة قالب الرسالة إذا لم يكن موجوداً
+            if (!localStorage.getItem(STORAGE_KEYS.SMS_TEMPLATE)) {
+                localStorage.setItem(STORAGE_KEYS.SMS_TEMPLATE, DEFAULT_SMS_TEMPLATE);
+            }
+
+            // تهيئة بيانات العملاء، الباقات، والمجموعات إذا كانت فارغة
+            if (getFromStorage(STORAGE_KEYS.CLIENTS).length === 0) {
+                saveToStorage(STORAGE_KEYS.PACKAGES, DUMMY_DATA.packages);
+                saveToStorage(STORAGE_KEYS.GROUPS, DUMMY_DATA.groups);
+                saveToStorage(STORAGE_KEYS.CLIENTS, DUMMY_DATA.clients);
+            }
         }
 
-        // =====================================
-        //          🔐 أولاً: حماية الموقع
-        // =====================================
-        function checkPassword() {
-            const input = document.getElementById('password-input').value;
-            if (input === PASSWORD) {
-                document.getElementById('auth-page').style.display = 'none';
-                document.getElementById('dashboard-page').style.display = 'block';
-                renderDashboard();
+        // --- 1. دوال الحماية بكلمة سر (Login) -----------------------------------------------------------------------------------------------------------------------
+        
+        /**
+         * @function checkLoginStatus
+         * @description تتحقق من حالة تسجيل الدخول وتُظهر/تُخفي الـ overlay.
+         */
+        function checkLoginStatus() {
+            const loggedIn = getFromStorage(STORAGE_KEYS.LOGGED_IN, 'false') === 'true';
+            const overlay = document.getElementById('login-overlay');
+            const content = document.getElementById('app-content');
+
+            if (loggedIn) {
+                overlay.style.display = 'none';
+                content.style.display = 'block';
+                // عرض القسم الافتراضي (الرئيسية)
+                showSection('dashboard', document.querySelector('.nav-item a'));
             } else {
-                alert('كلمة السر غير صحيحة');
+                overlay.style.display = 'flex';
+                content.style.display = 'none';
             }
         }
 
-        // تحقق من حالة الدخول عند تحميل الصفحة
-        window.onload = function() {
-            // يمكن هنا إضافة منطق لتخزين حالة الدخول في Session Storage لتجنب إدخال كلمة السر في كل مرة
-            // لكن للتنفيذ المطلوب بالضبط، نبدأ بصفحة كلمة السر.
-            document.getElementById('auth-page').style.display = 'flex';
-        }
-
-        // =====================================
-        //          وظائف العرض العامة
-        // =====================================
-
-        function renderDashboard() {
-            document.getElementById('current-month-display').textContent = systemData.currentMonth;
-            renderClients(systemData.clients);
-            updateStats();
-        }
-
-        function renderClients(clientsToRender) {
-            const tableBody = document.getElementById('clients-table-body');
-            tableBody.innerHTML = ''; // تفريغ الجدول
-
-            // تطبيق فلترة المتأخرين إذا كانت نشطة
-            const finalClients = isLateFilterActive
-                ? clientsToRender.filter(c => !isClientPaidForCurrentMonth(c))
-                : clientsToRender;
-
-            if (finalClients.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا يوجد مشتركين لعرضهم.</td></tr>';
-                return;
-            }
-
-            finalClients.forEach(client => {
-                const isPaid = isClientPaidForCurrentMonth(client);
-                const statusClass = isPaid ? 'paid' : 'late';
-                const statusText = isPaid ? 'مدفوع' : 'متأخر';
-
-                const row = tableBody.insertRow();
-                row.innerHTML = `
-                    <td>${client.name}</td>
-                    <td>${client.phone}</td>
-                    <td>
-                        <button class="btn payment-status-btn ${statusClass}" 
-                                onclick="togglePaymentStatus('${client.id}')">
-                            ${statusText}
-                        </button>
-                    </td>
-                    <td class="actions-cell">
-                        <button class="btn btn-warning" onclick="openEditClientModal('${client.id}')">تعديل</button>
-                        <button class="btn btn-danger" onclick="deleteClient('${client.id}')">حذف</button>
-                        <button class="btn btn-secondary" onclick="openHistoryModal('${client.id}')">سجل المدفوعات</button>
-                    </td>
-                `;
-            });
-        }
-
-        function isClientPaidForCurrentMonth(client) {
-            const currentMonthPayment = client.payments.find(p => p.month === systemData.currentMonth);
-            return currentMonthPayment && currentMonthPayment.paid === true;
-        }
-
-
-        function updateStats() {
-            const totalClients = systemData.clients.length;
-            const paidClients = systemData.clients.filter(isClientPaidForCurrentMonth).length;
-            const lateClients = totalClients - paidClients;
-
-            const expectedRevenue = totalClients * MONTHLY_FEE;
-            const collectedRevenue = paidClients * MONTHLY_FEE;
-
-            document.getElementById('total-clients-stat').textContent = totalClients;
-            document.getElementById('expected-revenue-stat').textContent = `${expectedRevenue.toLocaleString()} ج.م`;
-            document.getElementById('collected-revenue-stat').textContent = `${collectedRevenue.toLocaleString()} ج.م`;
-            document.getElementById('late-clients-stat').textContent = lateClients;
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        function openModal(id) {
-            document.getElementById(id).style.display = 'block';
-        }
-
-        // =====================================
-        //          📌 ثانياً: نظام المشتركين (CRUD)
-        // =====================================
-
-        function generateUniqueId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
-
-        function openAddClientModal() {
-            document.getElementById('modal-title').textContent = 'إضافة مشترك جديد';
-            document.getElementById('client-form').reset();
-            document.getElementById('client-id').value = '';
-            openModal('client-modal');
-        }
-
-        function openEditClientModal(clientId) {
-            const client = systemData.clients.find(c => c.id === clientId);
-            if (!client) return;
-
-            document.getElementById('modal-title').textContent = 'تعديل بيانات مشترك';
-            document.getElementById('client-id').value = client.id;
-            document.getElementById('client-name').value = client.name;
-            document.getElementById('client-phone').value = client.phone;
-            openModal('client-modal');
-        }
-
-        function saveClient(event) {
+        /**
+         * @function login
+         * @description معالجة محاولة تسجيل الدخول.
+         * @param {Event} event - حدث تقديم الفورم.
+         */
+        document.getElementById('login-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            const id = document.getElementById('client-id').value;
-            const name = document.getElementById('client-name').value.trim();
-            const phone = document.getElementById('client-phone').value.trim();
+            const passwordInput = document.getElementById('password-input').value;
+            const storedPassword = getFromStorage(STORAGE_KEYS.PASSWORD, DEFAULT_PASSWORD);
+            const messageEl = document.getElementById('login-message');
 
-            if (!name || !phone) {
-                alert('الاسم ورقم الهاتف مطلوبان.');
+            if (passwordInput === storedPassword) {
+                localStorage.setItem(STORAGE_KEYS.LOGGED_IN, 'true');
+                messageEl.style.display = 'none';
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                // تهيئة الواجهة بعد الدخول
+                showSection('dashboard', document.querySelector('.nav-item a'));
+                initializeInterface(); 
+            } else {
+                messageEl.textContent = 'كلمة السر غير صحيحة.';
+                messageEl.style.display = 'block';
+                messageEl.className = 'alert alert-danger';
+            }
+        });
+
+        /**
+         * @function logout
+         * @description تسجيل الخروج وحذف حالة الدخول وإعادة تحميل الصفحة.
+         */
+        function logout() {
+            if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+                localStorage.removeItem(STORAGE_KEYS.LOGGED_IN);
+                location.reload();
+            }
+        }
+
+        /**
+         * @function changePassword
+         * @description تغيير كلمة السر بعد التحقق من كلمة السر القديمة.
+         * @param {Event} event - حدث تقديم الفورم.
+         */
+        function changePassword(event) {
+            event.preventDefault();
+            const oldPass = document.getElementById('old-password').value;
+            const newPass = document.getElementById('new-password').value;
+            const confirmNewPass = document.getElementById('confirm-new-password').value;
+            const messageEl = document.getElementById('password-message');
+            const storedPassword = getFromStorage(STORAGE_KEYS.PASSWORD, DEFAULT_PASSWORD);
+
+            messageEl.style.display = 'none';
+
+            if (oldPass !== storedPassword) {
+                messageEl.textContent = 'كلمة السر القديمة غير صحيحة.';
+                messageEl.className = 'alert alert-danger';
+                messageEl.style.display = 'block';
                 return;
             }
+
+            if (newPass !== confirmNewPass) {
+                messageEl.textContent = 'كلمة السر الجديدة وتأكيدها غير متطابقين.';
+                messageEl.className = 'alert alert-danger';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            if (newPass.length < 5) {
+                messageEl.textContent = 'يجب أن تكون كلمة السر الجديدة 5 أحرف على الأقل.';
+                messageEl.className = 'alert alert-danger';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            localStorage.setItem(STORAGE_KEYS.PASSWORD, newPass);
+            messageEl.textContent = 'تم تغيير كلمة السر بنجاح!';
+            messageEl.className = 'alert alert-success';
+            messageEl.style.display = 'block';
+            document.getElementById('change-password-form').reset();
+        }
+
+        // --- 2. دوال إدارة الباقات (Packages) ---------------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function generateUniqueId
+         * @description توليد رقم ID فريد بناءً على الوقت الحالي.
+         * @returns {number} ID فريد.
+         */
+        function generateUniqueId() {
+            return Date.now();
+        }
+
+        /**
+         * @function savePackage
+         * @description إضافة أو تعديل باقة.
+         * @param {Event} event - حدث تقديم الفورم.
+         */
+        document.getElementById('package-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('package-id').value;
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES);
+
+            const newPackage = {
+                id: id ? parseInt(id) : generateUniqueId(),
+                name: document.getElementById('package-name').value,
+                net: parseFloat(document.getElementById('package-net').value),
+                minutes: parseInt(document.getElementById('package-minutes').value),
+                price: parseFloat(document.getElementById('package-price').value).toFixed(2),
+                notes: document.getElementById('package-notes').value
+            };
 
             if (id) {
-                // تعديل مشترك
-                const client = systemData.clients.find(c => c.id === id);
-                if (client) {
-                    client.name = name;
-                    client.phone = phone;
-                    alert('تم تعديل بيانات المشترك بنجاح.');
+                // تعديل
+                const index = packages.findIndex(p => p.id === newPackage.id);
+                if (index !== -1) packages[index] = newPackage;
+            } else {
+                // إضافة
+                packages.push(newPackage);
+            }
+
+            saveToStorage(STORAGE_KEYS.PACKAGES, packages);
+            document.getElementById('package-form-container').style.display = 'none';
+            renderPackages();
+            populateClientPackageOptions();
+            // تحديث واجهات أخرى تعتمد على الباقات
+            renderClients();
+            renderPayments();
+        });
+
+        /**
+         * @function deletePackage
+         * @description حذف باقة بعد التحقق من استخدامها.
+         * @param {number} packageId - ID الباقة.
+         */
+        function deletePackage(packageId) {
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            const isUsed = clients.some(c => c.packageId === packageId);
+            
+            if (isUsed) {
+                if (!confirm("تنبيه: هذه الباقة مستخدمة من عملاء. هل أنت متأكد من الحذف؟ سيتم حذف الباقة ولن يتم ربط العملاء بها مجدداً.")) {
+                    return;
                 }
             } else {
-                // إضافة مشترك جديد
-                const newClient = {
-                    id: generateUniqueId(),
-                    name: name,
-                    phone: phone,
-                    payments: []
-                };
-                systemData.clients.push(newClient);
-                alert('تم إضافة المشترك بنجاح.');
-            }
-
-            saveData();
-            closeModal('client-modal');
-            renderDashboard();
-        }
-
-        function deleteClient(clientId) {
-            if (confirm('هل أنت متأكد من حذف هذا المشترك نهائيًا؟')) {
-                systemData.clients = systemData.clients.filter(c => c.id !== clientId);
-                saveData();
-                renderDashboard();
-                alert('تم حذف المشترك بنجاح.');
-            }
-        }
-
-        function filterClients() {
-            const searchTerm = document.getElementById('search').value.toLowerCase();
-            if (searchTerm === '') {
-                // إذا كان مربع البحث فارغًا، اعرض جميع المشتركين (مع مراعاة فلتر المتأخرين)
-                renderClients(systemData.clients);
-                return;
-            }
-
-            const filtered = systemData.clients.filter(client =>
-                client.name.toLowerCase().includes(searchTerm) ||
-                client.phone.includes(searchTerm)
-            );
-
-            // عرض النتائج المفلترة (مع مراعاة فلتر المتأخرين)
-            renderClients(filtered);
-        }
-
-        // =====================================
-        //          📅 ثالثاً: إدارة الدفع الشهري
-        // =====================================
-
-        function startNewMonth() {
-            if (!confirm('هل أنت متأكد من بدء شهر جديد؟ سيتم تحديث الشهر الحالي وإعادة ضبط حالة جميع المشتركين إلى "متأخر".')) {
-                return;
-            }
-
-            const currentDate = new Date(systemData.currentMonth + '-01');
-            currentDate.setMonth(currentDate.getMonth() + 1); // الانتقال للشهر التالي
-
-            systemData.currentMonth = getCurrentMonthKey(currentDate);
-
-            // لا نحتاج لإعادة ضبط حالة "متأخر" لأن الدفع يكون مرتبط بالشهر
-            // وبما أن الشهر الجديد لا يوجد به سجل دفع للمشترك، فإن حالته التلقائية هي "متأخر"
-
-            saveData();
-            renderDashboard();
-            alert(`تم بدء شهر جديد بنجاح. الشهر الحالي هو: ${systemData.currentMonth}`);
-        }
-
-        // =====================================
-        //          💰 رابعاً: تسجيل الدفع
-        // =====================================
-
-        function togglePaymentStatus(clientId) {
-            const client = systemData.clients.find(c => c.id === clientId);
-            if (!client) return;
-
-            const monthKey = systemData.currentMonth;
-            let paymentRecord = client.payments.find(p => p.month === monthKey);
-
-            if (paymentRecord && paymentRecord.paid) {
-                // إلغاء التسجيل: حذفه من سجل الدفع
-                client.payments = client.payments.filter(p => p.month !== monthKey);
-                alert(`تم إلغاء دفع شهر ${monthKey} للمشترك ${client.name}. الحالة: متأخر.`);
-            } else {
-                // تسجيل الدفع
-                const newPayment = {
-                    month: monthKey,
-                    paid: true,
-                    datePaid: new Date().toISOString().split('T')[0], // تنسيق YYYY-MM-DD
-                    amount: MONTHLY_FEE
-                };
-
-                if (paymentRecord) {
-                    // تحديث سجل موجود (نظرياً لا يجب أن يحدث إذا كان paid: false)
-                    Object.assign(paymentRecord, newPayment);
-                } else {
-                    // إضافة سجل جديد
-                    client.payments.push(newPayment);
+                if (!confirm("هل أنت متأكد أنك تريد حذف هذه الباقة نهائياً؟")) {
+                    return;
                 }
-                alert(`تم تسجيل دفع شهر ${monthKey} للمشترك ${client.name}. المبلغ: ${MONTHLY_FEE} ج.م. الحالة: مدفوع.`);
             }
-
-            saveData();
-            renderDashboard();
+            
+            let packages = getFromStorage(STORAGE_KEYS.PACKAGES);
+            packages = packages.filter(p => p.id !== packageId);
+            saveToStorage(STORAGE_KEYS.PACKAGES, packages);
+            
+            // يمكن تعيين packageId للعملاء المرتبطين بـ null أو باقة افتراضية
+            // هنا سنترك العملاء كما هم حتى يتم تعديلهم يدوياً
+            
+            renderPackages();
+            populateClientPackageOptions();
+            renderClients();
         }
 
-        // =====================================
-        //          📜 سادساً: سجل تاريخ الدفع
-        // =====================================
+        /**
+         * @function editPackage
+         * @description تعبئة فورم الباقات لغرض التعديل.
+         * @param {number} packageId - ID الباقة.
+         */
+        function editPackage(packageId) {
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES);
+            const pkg = packages.find(p => p.id === packageId);
 
-        function openHistoryModal(clientId) {
-            const client = systemData.clients.find(c => c.id === clientId);
-            if (!client) return;
+            if (pkg) {
+                document.getElementById('package-id').value = pkg.id;
+                document.getElementById('package-name').value = pkg.name;
+                document.getElementById('package-net').value = pkg.net;
+                document.getElementById('package-minutes').value = pkg.minutes;
+                document.getElementById('package-price').value = pkg.price;
+                document.getElementById('package-notes').value = pkg.notes;
+                
+                document.getElementById('package-form-submit-btn').textContent = 'تعديل';
+                document.getElementById('package-form-container').style.display = 'block';
+            }
+        }
+        
+        /**
+         * @function resetPackageForm
+         * @description تهيئة فورم الباقات للإضافة الجديدة.
+         */
+        function resetPackageForm() {
+            document.getElementById('package-form').reset();
+            document.getElementById('package-id').value = '';
+            document.getElementById('package-form-submit-btn').textContent = 'إضافة';
+            document.getElementById('package-form-container').style.display = 'block';
+        }
 
-            document.getElementById('client-history-name').textContent = client.name;
-            const tableBody = document.getElementById('history-table-body');
+        /**
+         * @function renderPackages
+         * @description عرض جدول الباقات.
+         */
+        function renderPackages() {
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES);
+            const tableBody = document.getElementById('packages-table').getElementsByTagName('tbody')[0];
             tableBody.innerHTML = '';
-
-            if (client.payments.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا يوجد سجلات دفع سابقة.</td></tr>';
-            }
-
-            // عرض السجلات بترتيب زمني عكسي
-            const sortedPayments = [...client.payments].sort((a, b) => new Date(b.month) - new Date(a.month));
-
-            sortedPayments.forEach(payment => {
+            
+            packages.forEach(pkg => {
                 const row = tableBody.insertRow();
-                const statusText = payment.paid ? 'مدفوع' : 'متأخر'; // للتأكيد فقط، المفروض يكونوا كلهم مدفوعين
-                const statusColor = payment.paid ? 'green' : 'red';
-                const datePaid = payment.datePaid ? payment.datePaid : '-';
-
                 row.innerHTML = `
-                    <td>${payment.month}</td>
-                    <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
-                    <td>${payment.amount.toLocaleString()} ج.م</td>
-                    <td>${datePaid}</td>
+                    <td data-label="ID">${pkg.id}</td>
+                    <td data-label="الاسم">${pkg.name}</td>
+                    <td data-label="الإنترنت">${pkg.net}</td>
+                    <td data-label="الدقائق">${pkg.minutes}</td>
+                    <td data-label="السعر">${parseFloat(pkg.price).toFixed(2)}</td>
+                    <td data-label="ملاحظات">${pkg.notes}</td>
+                    <td data-label="الإجراءات">
+                        <button class="btn btn-sm btn-info" onclick="editPackage(${pkg.id})">تعديل</button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePackage(${pkg.id})">حذف</button>
+                    </td>
                 `;
             });
-
-            openModal('history-modal');
         }
 
-        // =====================================
-        //          🔎 سابعاً: فلترة المتأخرين فقط
-        // =====================================
 
-        function toggleLateFilter() {
-            isLateFilterActive = !isLateFilterActive;
-            const btn = document.getElementById('toggle-late-btn');
+        // --- 3. دوال إدارة العملاء (Clients) -----------------------------------------------------------------------------------------------------------------------
 
-            if (isLateFilterActive) {
-                btn.textContent = 'عرض الكل';
-                btn.classList.remove('btn-warning');
-                btn.classList.add('btn-secondary');
+        /**
+         * @function saveClient
+         * @description إضافة أو تعديل عميل. (يتم استدعاؤها من إيفنت submit فورمة العملاء)
+         */
+        document.getElementById('client-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('client-id').value;
+            let clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+
+            const newClient = {
+                id: id ? parseInt(id) : generateUniqueId(),
+                name: document.getElementById('client-name').value,
+                phone: document.getElementById('client-phone').value,
+                packageId: parseInt(document.getElementById('client-package').value),
+                groupId: parseInt(document.getElementById('client-group').value),
+                active: document.getElementById('client-active').checked,
+                createdAt: id ? clients.find(c => c.id === parseInt(id)).createdAt : new Date().toISOString()
+            };
+
+            if (id) {
+                // تعديل
+                const index = clients.findIndex(c => c.id === newClient.id);
+                if (index !== -1) clients[index] = newClient;
             } else {
-                btn.textContent = 'عرض المتأخرين فقط';
-                btn.classList.remove('btn-secondary');
-                btn.classList.add('btn-warning');
+                // إضافة
+                clients.push(newClient);
             }
 
-            // إعادة عرض المشتركين لتطبيق الفلتر
-            filterClients();
+            saveToStorage(STORAGE_KEYS.CLIENTS, clients);
+            document.getElementById('client-form-container').style.display = 'none';
+            renderClients();
+            renderGroups(); // قد تؤثر على عدد العملاء في المجموعة
+        });
+
+
+        /**
+         * @function deleteClient
+         * @description حذف عميل نهائيًا مع سجلات الدفع المرتبطة به.
+         * @param {number} clientId - ID العميل.
+         */
+        function deleteClient(clientId) {
+            if (!confirm("هل أنت متأكد أنك تريد حذف العميل نهائياً؟ سيتم حذف جميع سجلات الدفع المرتبطة به.")) {
+                return;
+            }
+
+            // 1. حذف العميل
+            let clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            clients = clients.filter(c => c.id !== clientId);
+            saveToStorage(STORAGE_KEYS.CLIENTS, clients);
+
+            // 2. حذف سجلات الدفع المرتبطة
+            let payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            payments = payments.filter(p => p.clientId !== clientId);
+            saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
+
+            // 3. تحديث الواجهات
+            renderClients();
+            renderGroups();
+            renderPayments();
+            alert("تم حذف العميل وسجلاته بنجاح.");
         }
 
-        // =====================================
-        //          📤📥 ثامناً: التصدير والاستيراد
-        // =====================================
+        /**
+         * @function editClient
+         * @description تعبئة فورم العملاء لغرض التعديل.
+         * @param {number} clientId - ID العميل.
+         */
+        function editClient(clientId) {
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            const client = clients.find(c => c.id === clientId);
 
-        function downloadFile(content, filename, mimeType) {
-            const blob = new Blob([content], { type: mimeType });
+            if (client) {
+                document.getElementById('client-id').value = client.id;
+                document.getElementById('client-name').value = client.name;
+                document.getElementById('client-phone').value = client.phone;
+                document.getElementById('client-package').value = client.packageId;
+                document.getElementById('client-group').value = client.groupId;
+                document.getElementById('client-active').checked = client.active;
+                
+                document.getElementById('client-form-submit-btn').textContent = 'تعديل';
+                document.getElementById('client-form-container').style.display = 'block';
+            }
+        }
+        
+        /**
+         * @function resetClientForm
+         * @description تهيئة فورم العملاء للإضافة الجديدة.
+         */
+        function resetClientForm() {
+            document.getElementById('client-form').reset();
+            document.getElementById('client-id').value = '';
+            document.getElementById('client-active').checked = true;
+            document.getElementById('client-form-submit-btn').textContent = 'إضافة';
+            document.getElementById('client-form-container').style.display = 'block';
+        }
+
+
+        /**
+         * @function renderClients
+         * @description عرض جدول العملاء بناءً على البحث والفلاتر.
+         */
+        function renderClients() {
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES).reduce((acc, p) => ({ ...acc, [p.id]: p.name }), {});
+            const groups = getFromStorage(STORAGE_KEYS.GROUPS).reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {});
+            const tableBody = document.getElementById('clients-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            const searchTerm = document.getElementById('client-search').value.toLowerCase();
+            const statusFilter = document.getElementById('client-status-filter').value;
+            const groupFilter = document.getElementById('client-group-filter').value;
+
+            const filteredClients = clients.filter(client => {
+                const matchesSearch = client.name.toLowerCase().includes(searchTerm) || client.phone.includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' ? client.active : !client.active);
+                const matchesGroup = groupFilter === 'all' || client.groupId === parseInt(groupFilter);
+                return matchesSearch && matchesStatus && matchesGroup;
+            });
+
+            filteredClients.forEach(client => {
+                const row = tableBody.insertRow();
+                const packageName = packages[client.packageId] || 'غير معروفة';
+                const groupName = groups[client.groupId] || 'لا مجموعة';
+                const statusText = client.active ? '<span style="color: var(--success-color); font-weight: bold;">نشط</span>' : '<span style="color: var(--danger-color); font-weight: bold;">موقوف</span>';
+                
+                row.innerHTML = `
+                    <td data-label="الاسم">${client.name}</td>
+                    <td data-label="الرقم"><a href="tel:${client.phone}">${client.phone}</a></td>
+                    <td data-label="الباقة">${packageName}</td>
+                    <td data-label="المجموعة">${groupName}</td>
+                    <td data-label="الحالة">${statusText}</td>
+                    <td data-label="تاريخ الإضافة">${new Date(client.createdAt).toLocaleDateString('ar-EG')}</td>
+                    <td data-label="الإجراءات">
+                        <button class="btn btn-sm btn-info" onclick="editClient(${client.id})">تعديل</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteClient(${client.id})">حذف نهائي</button>
+                    </td>
+                `;
+            });
+        }
+        
+        /**
+         * @function populateClientPackageOptions
+         * @description تعبئة قائمة الباقات المنسدلة في فورم العملاء.
+         */
+        function populateClientPackageOptions() {
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES);
+            const selectEl = document.getElementById('client-package');
+            selectEl.innerHTML = '<option value="">اختر باقة...</option>';
+            packages.forEach(pkg => {
+                const option = document.createElement('option');
+                option.value = pkg.id;
+                option.textContent = `${pkg.name} (${parseFloat(pkg.price).toFixed(2)})`;
+                selectEl.appendChild(option);
+            });
+        }
+        
+        /**
+         * @function populateClientGroupOptions
+         * @description تعبئة قائمة المجموعات المنسدلة في فورم العملاء وفلاتر العملاء.
+         */
+        function populateClientGroupOptions() {
+            const groups = getFromStorage(STORAGE_KEYS.GROUPS);
+            const clientSelectEl = document.getElementById('client-group');
+            const filterSelectEl = document.getElementById('client-group-filter');
+            
+            clientSelectEl.innerHTML = '<option value="">اختر مجموعة...</option>';
+            filterSelectEl.innerHTML = '<option value="all">كل المجموعات</option>';
+            
+            groups.forEach(group => {
+                const clientOption = document.createElement('option');
+                clientOption.value = group.id;
+                clientOption.textContent = group.name;
+                clientSelectEl.appendChild(clientOption);
+                
+                const filterOption = document.createElement('option');
+                filterOption.value = group.id;
+                filterOption.textContent = group.name;
+                filterSelectEl.appendChild(filterOption);
+            });
+        }
+        
+        // إيفنت البحث والفلاتر
+        document.getElementById('client-search').addEventListener('input', renderClients);
+        document.getElementById('client-status-filter').addEventListener('change', renderClients);
+        document.getElementById('client-group-filter').addEventListener('change', renderClients);
+
+
+        // --- 4. دوال إدارة المجموعات (Groups) ---------------------------------------------------------------------------------------------------------------------
+        
+        /**
+         * @function saveGroup
+         * @description إضافة أو تعديل مجموعة.
+         */
+        document.getElementById('group-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('group-id').value;
+            const groups = getFromStorage(STORAGE_KEYS.GROUPS);
+
+            const newGroup = {
+                id: id ? parseInt(id) : generateUniqueId(),
+                name: document.getElementById('group-name').value,
+                phone: document.getElementById('group-phone').value
+            };
+
+            if (id) {
+                // تعديل
+                const index = groups.findIndex(g => g.id === newGroup.id);
+                if (index !== -1) groups[index] = newGroup;
+            } else {
+                // إضافة
+                groups.push(newGroup);
+            }
+
+            saveToStorage(STORAGE_KEYS.GROUPS, groups);
+            document.getElementById('group-form-container').style.display = 'none';
+            renderGroups();
+            populateClientGroupOptions();
+        });
+
+        /**
+         * @function deleteGroup
+         * @description حذف مجموعة بعد التحقق من العملاء المرتبطين.
+         * @param {number} groupId - ID المجموعة.
+         */
+        function deleteGroup(groupId) {
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            const linkedClientsCount = clients.filter(c => c.groupId === groupId).length;
+            
+            if (linkedClientsCount > 0) {
+                const action = prompt(`تنبيه: يوجد ${linkedClientsCount} عميل مرتبط بهذه المجموعة. أدخل 'حذف' للتأكيد وحذف المجموعة (سيتم إلغاء ربط العملاء بها). أو اضغط 'إلغاء'.`);
+                if (action !== 'حذف') {
+                    return;
+                }
+                
+                // إلغاء ربط العملاء بالمجموعة
+                clients.forEach(c => {
+                    if (c.groupId === groupId) c.groupId = null;
+                });
+                saveToStorage(STORAGE_KEYS.CLIENTS, clients);
+            } else {
+                if (!confirm("هل أنت متأكد أنك تريد حذف هذه المجموعة نهائياً؟")) {
+                    return;
+                }
+            }
+            
+            let groups = getFromStorage(STORAGE_KEYS.GROUPS);
+            groups = groups.filter(g => g.id !== groupId);
+            saveToStorage(STORAGE_KEYS.GROUPS, groups);
+            
+            renderGroups();
+            populateClientGroupOptions();
+            renderClients();
+        }
+
+        /**
+         * @function editGroup
+         * @description تعبئة فورم المجموعات لغرض التعديل.
+         * @param {number} groupId - ID المجموعة.
+         */
+        function editGroup(groupId) {
+            const groups = getFromStorage(STORAGE_KEYS.GROUPS);
+            const group = groups.find(g => g.id === groupId);
+
+            if (group) {
+                document.getElementById('group-id').value = group.id;
+                document.getElementById('group-name').value = group.name;
+                document.getElementById('group-phone').value = group.phone;
+                
+                document.getElementById('group-form-submit-btn').textContent = 'تعديل';
+                document.getElementById('group-form-container').style.display = 'block';
+            }
+        }
+        
+        /**
+         * @function resetGroupForm
+         * @description تهيئة فورم المجموعات للإضافة الجديدة.
+         */
+        function resetGroupForm() {
+            document.getElementById('group-form').reset();
+            document.getElementById('group-id').value = '';
+            document.getElementById('group-form-submit-btn').textContent = 'إضافة';
+            document.getElementById('group-form-container').style.display = 'block';
+        }
+
+        /**
+         * @function renderGroups
+         * @description عرض جدول المجموعات.
+         */
+        function renderGroups() {
+            const groups = getFromStorage(STORAGE_KEYS.GROUPS);
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            const tableBody = document.getElementById('groups-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            groups.forEach(group => {
+                const clientsCount = clients.filter(c => c.groupId === group.id).length;
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td data-label="ID">${group.id}</td>
+                    <td data-label="الاسم">${group.name}</td>
+                    <td data-label="هاتف المسؤول"><a href="tel:${group.phone}">${group.phone}</a></td>
+                    <td data-label="عدد العملاء">${clientsCount}</td>
+                    <td data-label="الإجراءات">
+                        <button class="btn btn-sm btn-info" onclick="editGroup(${group.id})">تعديل</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteGroup(${group.id})">حذف</button>
+                    </td>
+                `;
+            });
+        }
+
+
+        // --- 5. دوال الدفع الشهري (Monthly Payments) ----------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function getPaymentEssentials
+         * @description جلب الشهر والسنة المختارين حالياً.
+         * @returns {{month: number, year: number}} الشهر والسنة.
+         */
+        function getPaymentEssentials() {
+            const month = parseInt(document.getElementById('payment-month').value);
+            const year = parseInt(document.getElementById('payment-year').value);
+            return { month, year };
+        }
+
+        /**
+         * @function createMonthlyRecords
+         * @description إنشاء سجلات دفع جديدة للشهر والسنة المحددين للعملاء النشطين.
+         */
+        function createMonthlyRecords() {
+            const { month, year } = getPaymentEssentials();
+            if (isNaN(month) || isNaN(year) || month < 1 || month > 12 || year < 2000) {
+                alert("الرجاء تحديد شهر وسنة صحيحين.");
+                return;
+            }
+
+            if (!confirm(`هل أنت متأكد أنك تريد إنشاء سجلات دفع جديدة لشهر ${MONTH_NAMES[month-1]} ${year}؟`)) {
+                return;
+            }
+            
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS).filter(c => c.active);
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES).reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+            let payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+
+            let recordsCreated = 0;
+            clients.forEach(client => {
+                const packageData = packages[client.packageId];
+                
+                // التحقق ما إذا كان السجل موجوداً بالفعل لهذا العميل والشهر والسنة
+                const exists = payments.some(p => p.clientId === client.id && p.month === month && p.year === year);
+                
+                if (!exists && packageData) {
+                    const price = parseFloat(packageData.price);
+                    const newRecord = {
+                        id: generateUniqueId(),
+                        clientId: client.id,
+                        month: month,
+                        year: year,
+                        amount: price,
+                        discount: 0.00,
+                        finalAmount: price,
+                        paid: false,
+                        paidAt: null,
+                        note: null,
+                        lastReminderAt: null,
+                        reminderCount: 0
+                    };
+                    payments.push(newRecord);
+                    recordsCreated++;
+                }
+            });
+
+            if (recordsCreated > 0) {
+                saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
+                renderPayments();
+                document.getElementById('payment-message').textContent = `تم إنشاء ${recordsCreated} سجل دفع جديد.`;
+                document.getElementById('payment-message').className = 'alert alert-success';
+                document.getElementById('payment-message').style.display = 'block';
+            } else {
+                document.getElementById('payment-message').textContent = "لم يتم إنشاء سجلات جديدة. قد تكون موجودة بالفعل أو لا يوجد عملاء نشطون.";
+                document.getElementById('payment-message').className = 'alert alert-warning';
+                document.getElementById('payment-message').style.display = 'block';
+            }
+        }
+        
+        /**
+         * @function updatePaymentRecord
+         * @description تحديث سجل دفع عند تغيير الخصم أو حالة الدفع أو الملاحظات.
+         * @param {number} recordId - ID سجل الدفع.
+         * @param {string} type - نوع التحديث ('discount', 'paid', 'note').
+         * @param {any} value - القيمة الجديدة.
+         */
+        function updatePaymentRecord(recordId, type, value) {
+            let payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            const recordIndex = payments.findIndex(p => p.id === recordId);
+            
+            if (recordIndex === -1) return;
+
+            const record = payments[recordIndex];
+
+            if (type === 'discount') {
+                const discount = parseFloat(value) || 0;
+                record.discount = discount;
+                record.finalAmount = parseFloat(record.amount) - discount;
+                record.finalAmount = parseFloat(record.finalAmount.toFixed(2));
+            } else if (type === 'paid') {
+                record.paid = value; // Boolean
+                record.paidAt = value ? new Date().toISOString() : null;
+            } else if (type === 'note') {
+                record.note = value;
+            }
+            
+            payments[recordIndex] = record;
+            saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
+            renderPayments(); // إعادة عرض الجدول لتحديث النهائي والحالة
+            renderReports(); // تحديث التقارير
+        }
+
+        /**
+         * @function renderPayments
+         * @description عرض جدول سجلات الدفع للشهر والسنة المحددين.
+         */
+        function renderPayments() {
+            const { month, year } = getPaymentEssentials();
+            
+            // حفظ الشهر والسنة المختارين لفتحات المتصفح القادمة
+            localStorage.setItem(STORAGE_KEYS.LAST_MONTH, month);
+            localStorage.setItem(STORAGE_KEYS.LAST_YEAR, year);
+            
+            const allPayments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            const currentPayments = allPayments.filter(p => p.month === month && p.year === year);
+            
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS).reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+            const packages = getFromStorage(STORAGE_KEYS.PACKAGES).reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+            
+            const tableBody = document.getElementById('payments-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            let totalExpected = 0;
+            let totalPaid = 0;
+            
+            currentPayments.forEach(record => {
+                const client = clients[record.clientId];
+                if (!client) return; // تجاوز السجلات التي لا يوجد لها عملاء (حذفوا)
+                const packageData = packages[client.packageId];
+                
+                totalExpected += record.finalAmount;
+                if (record.paid) totalPaid += record.finalAmount;
+
+                const packageName = packageData ? packageData.name : 'غير معروفة';
+                
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td data-label="العميل">${client.name}</td>
+                    <td data-label="الباقة">${packageName}</td>
+                    <td data-label="الرقم"><a href="tel:${client.phone}">${client.phone}</a></td>
+                    <td data-label="الأصلي">${record.amount.toFixed(2)}</td>
+                    <td data-label="الخصم">
+                        <input type="number" class="form-control" style="width: 80px;" value="${record.discount.toFixed(2)}" min="0" step="any"
+                            onchange="updatePaymentRecord(${record.id}, 'discount', this.value)" onfocusout="this.value=parseFloat(this.value).toFixed(2)">
+                    </td>
+                    <td data-label="النهائي" style="font-weight: bold;">${record.finalAmount.toFixed(2)}</td>
+                    <td data-label="تم الدفع؟">
+                        <input type="checkbox" class="paid-checkbox" ${record.paid ? 'checked' : ''}
+                            onclick="updatePaymentRecord(${record.id}, 'paid', this.checked)">
+                    </td>
+                    <td data-label="ملاحظات">
+                        <input type="text" class="form-control" value="${record.note || ''}"
+                            onchange="updatePaymentRecord(${record.id}, 'note', this.value)">
+                    </td>
+                    <td data-label="رسالة">
+                        <button class="btn btn-sm btn-warning" onclick="sendSmsReminder(${record.id})">SMS</button>
+                    </td>
+                `;
+            });
+            
+            // تحديث إحصائيات الدفع
+            updatePaymentStats(totalExpected, totalPaid);
+            
+            // تحديث صفحة المتأخرين أيضاً
+            renderDebtors();
+            renderReports();
+        }
+
+        /**
+         * @function updatePaymentStats
+         * @description تحديث بطاقات إحصائيات الدفع الشهري.
+         * @param {number} totalExpected - إجمالي المبلغ المتوقع.
+         * @param {number} totalPaid - إجمالي المبلغ المدفوع.
+         */
+        function updatePaymentStats(totalExpected, totalPaid) {
+            const totalDue = totalExpected - totalPaid;
+            const collectionRatio = totalExpected > 0 ? (totalPaid / totalExpected) * 100 : 0;
+
+            document.getElementById('stat-expected').textContent = totalExpected.toFixed(2);
+            document.getElementById('stat-paid').textContent = totalPaid.toFixed(2);
+            document.getElementById('stat-due').textContent = totalDue.toFixed(2);
+            document.getElementById('stat-ratio').textContent = `${collectionRatio.toFixed(1)}%`;
+        }
+
+        // --- 6 & 7. دوال إرسال SMS وقوالب الرسائل ------------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function getSmsTemplate
+         * @description يجلب قالب رسالة SMS من localStorage.
+         * @returns {string} قالب الرسالة.
+         */
+        function getSmsTemplate() {
+            return getFromStorage(STORAGE_KEYS.SMS_TEMPLATE, DEFAULT_SMS_TEMPLATE);
+        }
+
+        /**
+         * @function saveSmsTemplate
+         * @description يحفظ قالب رسالة SMS من textarea.
+         */
+        function saveSmsTemplate() {
+            const template = document.getElementById('sms-template-input').value;
+            saveToStorage(STORAGE_KEYS.SMS_TEMPLATE, template);
+            document.getElementById('payment-message').textContent = "تم حفظ قالب الرسالة بنجاح.";
+            document.getElementById('payment-message').className = 'alert alert-success';
+            document.getElementById('payment-message').style.display = 'block';
+        }
+        
+        /**
+         * @function resetSmsTemplate
+         * @description إعادة تعيين قالب الرسالة للقيمة الافتراضية.
+         */
+        function resetSmsTemplate() {
+            if (confirm("هل أنت متأكد من إعادة تعيين القالب للقيمة الافتراضية؟")) {
+                 localStorage.setItem(STORAGE_KEYS.SMS_TEMPLATE, DEFAULT_SMS_TEMPLATE);
+                 document.getElementById('sms-template-input').value = DEFAULT_SMS_TEMPLATE;
+                 document.getElementById('payment-message').textContent = "تم إعادة تعيين القالب الافتراضي.";
+                 document.getElementById('payment-message').className = 'alert alert-success';
+                 document.getElementById('payment-message').style.display = 'block';
+            }
+        }
+
+
+        /**
+         * @function applyTemplate
+         * @description استبدال المتغيرات في القالب بالبيانات.
+         * @param {string} template - القالب الذي يحتوي على {{متغيرات}}.
+         * @param {Object} data - البيانات (name, month, year, amount).
+         * @returns {string} الرسالة النهائية.
+         */
+        function applyTemplate(template, data) {
+            let message = template;
+            message = message.replace(/{{name}}/g, data.name || '');
+            message = message.replace(/{{month}}/g, data.month || '');
+            message = message.replace(/{{year}}/g, data.year || '');
+            message = message.replace(/{{amount}}/g, data.amount ? data.amount.toFixed(2) : '0.00');
+            return encodeURIComponent(message);
+        }
+
+
+        /**
+         * @function sendSmsReminder
+         * @description إرسال رسالة SMS فردية لعميل متأخر.
+         * @param {number} recordId - ID سجل الدفع.
+         */
+        function sendSmsReminder(recordId) {
+            let payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            const recordIndex = payments.findIndex(p => p.id === recordId);
+            const record = payments[recordIndex];
+            
+            if (!record) return;
+
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS).reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+            const client = clients[record.clientId];
+            
+            if (!client || !client.phone) {
+                alert("لا يوجد رقم هاتف مسجل لهذا العميل.");
+                return;
+            }
+
+            const templateData = {
+                name: client.name,
+                month: MONTH_NAMES[record.month - 1],
+                year: record.year,
+                amount: record.finalAmount
+            };
+            
+            const messageBody = applyTemplate(getSmsTemplate(), templateData);
+            const smsLink = `sms:${client.phone}?body=${messageBody}`;
+
+            // فتح رابط SMS
+            window.open(smsLink, '_blank');
+            
+            // تحديث سجل التذكير
+            record.lastReminderAt = new Date().toISOString();
+            record.reminderCount = (record.reminderCount || 0) + 1;
+            payments[recordIndex] = record;
+            saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
+            
+            // تحديث الواجهة
+            if (document.getElementById('debtors').style.display === 'block') {
+                 renderDebtors();
+            }
+        }
+
+        /**
+         * @function sendBulkSmsReminder
+         * @description إرسال رسالة SMS جماعية للمتأخرين.
+         */
+        function sendBulkSmsReminder() {
+            if (!confirm("هل أنت متأكد أنك تريد محاولة إرسال رسالة جماعية لكل المتأخرين؟")) {
+                return;
+            }
+            
+            const { month, year } = getPaymentEssentials();
+            let payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS).reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+            
+            const debtors = payments.filter(p => p.month === month && p.year === year && p.paid === false);
+            
+            if (debtors.length === 0) {
+                alert("لا يوجد متأخرين في هذا الشهر.");
+                return;
+            }
+            
+            const phones = debtors.map(d => clients[d.clientId]?.phone).filter(p => p);
+            const phoneList = phones.join(',');
+
+            // استخدام اسم عام في الرسالة الجماعية
+            const templateData = {
+                name: "العميل", 
+                month: MONTH_NAMES[month - 1],
+                year: year,
+                amount: debtors.reduce((sum, d) => sum + d.finalAmount, 0) / debtors.length // متوسط المبلغ
+            };
+            
+            const messageBody = applyTemplate(getSmsTemplate(), templateData);
+            const smsLink = `sms:${phoneList}?body=${messageBody}`;
+
+            // فتح رابط SMS
+            window.open(smsLink, '_blank');
+            
+            // تحديث سجل التذكير لجميع المتأخرين
+            payments = payments.map(p => {
+                if (p.month === month && p.year === year && p.paid === false) {
+                    p.lastReminderAt = new Date().toISOString();
+                    p.reminderCount = (p.reminderCount || 0) + 1;
+                }
+                return p;
+            });
+            saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
+            
+            // تحديث الواجهة
+            renderDebtors();
+        }
+
+        /**
+         * @function renderDebtors
+         * @description عرض جدول المتأخرين.
+         */
+        function renderDebtors() {
+            // عرض القالب الحالي
+            document.getElementById('sms-template-input').value = getSmsTemplate();
+
+            const { month, year } = getPaymentEssentials();
+            const allPayments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            const debtorsRecords = allPayments.filter(p => p.month === month && p.year === year && p.paid === false);
+            
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS).reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+            
+            const tableBody = document.getElementById('debtors-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+
+            debtorsRecords.forEach(record => {
+                const client = clients[record.clientId];
+                if (!client) return;
+                
+                const lastReminder = record.lastReminderAt 
+                    ? new Date(record.lastReminderAt).toLocaleDateString('ar-EG') 
+                    : 'لم يرسل';
+                
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td data-label="العميل">${client.name}</td>
+                    <td data-label="الرقم"><a href="tel:${client.phone}">${client.phone}</a></td>
+                    <td data-label="المبلغ">${record.finalAmount.toFixed(2)}</td>
+                    <td data-label="عدد التذكيرات">${record.reminderCount || 0}</td>
+                    <td data-label="آخر تذكير">${lastReminder}</td>
+                    <td data-label="إرسال SMS">
+                        <button class="btn btn-sm btn-warning" onclick="sendSmsReminder(${record.id})">SMS فردي</button>
+                    </td>
+                `;
+            });
+        }
+
+
+        // --- 9. دوال النسخ الاحتياطي (Backup & Restore) -------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function exportDataToJSON
+         * @description تصدير بيانات localStorage الرئيسية إلى ملف JSON.
+         */
+        function exportDataToJSON() {
+            const dataToExport = {
+                clients: getFromStorage(STORAGE_KEYS.CLIENTS),
+                packages: getFromStorage(STORAGE_KEYS.PACKAGES),
+                groups: getFromStorage(STORAGE_KEYS.GROUPS),
+                payments: getFromStorage(STORAGE_KEYS.PAYMENTS),
+                smsReminderTemplate: getFromStorage(STORAGE_KEYS.SMS_TEMPLATE, DEFAULT_SMS_TEMPLATE)
+                // لا يتم تضمين كلمة السر أو حالة الدخول
+            };
+
+            const jsonString = JSON.stringify(dataToExport, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
+
             const a = document.createElement('a');
             a.href = url;
-            a.download = filename;
+            a.download = `backup-${new Date().toISOString().slice(0, 10)}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            
+            alert("تم تصدير البيانات بنجاح إلى ملف backup.json!");
         }
 
-        function exportData(format) {
-            const date = new Date().toISOString().split('T')[0];
+        /**
+         * @function validateImportedData
+         * @description التحقق من وجود المفاتيح الأساسية في ملف الاستيراد.
+         * @param {Object} data - بيانات JSON المستوردة.
+         * @returns {boolean} - true إذا كانت البيانات صالحة.
+         */
+        function validateImportedData(data) {
+            const requiredKeys = ['clients', 'packages', 'groups', 'payments', 'smsReminderTemplate'];
+            return requiredKeys.every(key => data.hasOwnProperty(key));
+        }
 
-            if (format === 'json') {
-                const jsonContent = JSON.stringify(systemData, null, 2);
-                downloadFile(jsonContent, `clients_backup_${date}.json`, 'application/json');
-                alert('تم تصدير نسخة احتياطية (JSON).');
-            } else if (format === 'csv') {
-                // تصدير تقرير الشهر الحالي
-                let csv = 'الاسم,رقم الهاتف,حالة الشهر الحالي,المبلغ المدفوع (ج.م),تاريخ الدفع\n';
+        /**
+         * @function importDataFromInput
+         * @description بدء عملية الاستيراد من ملف محدد.
+         */
+        function importDataFromInput() {
+            const fileInput = document.getElementById('import-file-input');
+            const file = fileInput.files[0];
 
-                systemData.clients.forEach(client => {
-                    const payment = client.payments.find(p => p.month === systemData.currentMonth);
-                    const status = payment ? 'مدفوع' : 'متأخر';
-                    const amount = payment ? payment.amount : 0;
-                    const datePaid = payment ? payment.datePaid : '';
-
-                    csv += `${client.name},${client.phone},${status},${amount},${datePaid}\n`;
-                });
-
-                // تحويل لـ Base64 لتجنب مشاكل ترميز الـ CSV مع الأحرف العربية في بعض البرامج
-                const base64Csv = '\ufeff' + csv; // إضافة BOM للحرف العربي
-                downloadFile(base64Csv, `monthly_report_${systemData.currentMonth}_${date}.csv`, 'text/csv;charset=utf-8;');
-                alert(`تم تصدير تقرير شهر ${systemData.currentMonth} (CSV).`);
+            if (!file) {
+                alert("الرجاء اختيار ملف JSON للاستيراد.");
+                return;
             }
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (!importedData.clients) {
-                        alert('ملف الاستيراد غير صالح.');
+                    
+                    if (!validateImportedData(importedData)) {
+                        alert("فشل الاستيراد: ملف JSON غير صالح. المفاتيح الأساسية مفقودة.");
                         return;
                     }
 
-                    // دمج البيانات
-                    let newClientsCount = 0;
-                    let updatedClientsCount = 0;
-
-                    importedData.clients.forEach(importedClient => {
-                        const existingClientIndex = systemData.clients.findIndex(c => c.phone === importedClient.phone);
-
-                        if (existingClientIndex !== -1) {
-                            // دمج سجلات الدفع إذا كان المشترك موجوداً (حسب رقم الهاتف)
-                            const existingClient = systemData.clients[existingClientIndex];
-                            
-                            // دمج المدفوعات بدون تكرار
-                            importedClient.payments.forEach(importedPayment => {
-                                const exists = existingClient.payments.some(p => p.month === importedPayment.month);
-                                if (!exists) {
-                                    existingClient.payments.push(importedPayment);
-                                }
-                            });
-                            
-                            // تحديث الاسم والرقم (في حال تغييرهم)
-                            existingClient.name = importedClient.name;
-                            existingClient.phone = importedClient.phone;
-                            updatedClientsCount++;
-                        } else {
-                            // إضافة مشترك جديد (توليد ID جديد)
-                            importedClient.id = generateUniqueId();
-                            systemData.clients.push(importedClient);
-                            newClientsCount++;
-                        }
-                    });
-                    
-                    // تحديث الشهر الحالي إذا كان الشهر المستورد أحدث
-                    if (importedData.currentMonth && new Date(importedData.currentMonth) > new Date(systemData.currentMonth)) {
-                        systemData.currentMonth = importedData.currentMonth;
+                    if (!confirm("تحذير: سيتم استبدال جميع البيانات الحالية. هل أنت متأكد من المتابعة؟")) {
+                        return;
                     }
-
-                    saveData();
-                    renderDashboard();
-                    alert(`تم استيراد ودمج البيانات بنجاح!\n- مشتركين جدد: ${newClientsCount}\n- مشتركين تم تحديثهم: ${updatedClientsCount}`);
+                    
+                    // كتابة البيانات المستوردة إلى localStorage
+                    saveToStorage(STORAGE_KEYS.CLIENTS, importedData.clients || []);
+                    saveToStorage(STORAGE_KEYS.PACKAGES, importedData.packages || []);
+                    saveToStorage(STORAGE_KEYS.GROUPS, importedData.groups || []);
+                    saveToStorage(STORAGE_KEYS.PAYMENTS, importedData.payments || []);
+                    saveToStorage(STORAGE_KEYS.SMS_TEMPLATE, importedData.smsReminderTemplate || DEFAULT_SMS_TEMPLATE);
+                    
+                    alert("تم استيراد البيانات بنجاح! سيتم إعادة تحميل الصفحة.");
+                    location.reload();
 
                 } catch (error) {
-                    console.error(error);
-                    alert('حدث خطأ أثناء قراءة أو تحليل ملف الاستيراد.');
+                    alert(`فشل الاستيراد: حدث خطأ أثناء معالجة الملف. تأكد من أنه ملف JSON سليم.\nالخطأ: ${error.message}`);
+                    console.error('Import Error:', error);
                 }
             };
+
             reader.readAsText(file);
-            // إفراغ قيمة حقل الملف بعد الاستخدام لتمكين الاستيراد المتكرر لنفس الملف
-            document.getElementById('import-file').value = ''; 
         }
 
-        // =====================================
-        //          تهيئة وعرض أولي
-        // =====================================
-        // يتم استدعاء renderDashboard() بعد التحقق من كلمة السر
-        // التأكد من أن التخزين الأولي تم عند تحميل النظام لأول مرة
-        if (!localStorage.getItem(STORAGE_KEY)) {
-            saveData();
+        // --- 11. دوال التقارير (Reports) --------------------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function renderReports
+         * @description إنشاء وعرض الإحصائيات والتقارير.
+         */
+        function renderReports() {
+            const clients = getFromStorage(STORAGE_KEYS.CLIENTS);
+            const groups = getFromStorage(STORAGE_KEYS.GROUPS);
+            const payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
+            
+            // 1. إحصائيات عامة
+            const activeClients = clients.filter(c => c.active).length;
+            const inactiveClients = clients.length - activeClients;
+            
+            const statsHtml = `
+                <div class="card bg-info"><h4>إجمالي العملاء</h4><p>${clients.length}</p></div>
+                <div class="card bg-success"><h4>العملاء النشطون</h4><p>${activeClients}</p></div>
+                <div class="card bg-danger"><h4>العملاء الموقوفون</h4><p>${inactiveClients}</p></div>
+            `;
+            document.getElementById('reports-stats').innerHTML = statsHtml;
+            
+            // 2. إحصائيات المجموعات
+            const groupStats = groups.map(group => {
+                const total = clients.filter(c => c.groupId === group.id).length;
+                const active = clients.filter(c => c.groupId === group.id && c.active).length;
+                const inactive = total - active;
+                return { name: group.name, total, active, inactive };
+            });
+
+            const groupTableBody = document.getElementById('group-reports-table').getElementsByTagName('tbody')[0];
+            groupTableBody.innerHTML = '';
+            groupStats.forEach(stat => {
+                const row = groupTableBody.insertRow();
+                row.innerHTML = `
+                    <td data-label="المجموعة">${stat.name}</td>
+                    <td data-label="عدد العملاء">${stat.total}</td>
+                    <td data-label="عملاء نشطون">${stat.active}</td>
+                    <td data-label="عملاء موقوفون">${stat.inactive}</td>
+                `;
+            });
+            
+            // 3. ملخص الدفع الشهري الحالي
+            const { month, year } = getPaymentEssentials();
+            const currentPayments = payments.filter(p => p.month === month && p.year === year);
+            
+            let summary = `<div class="alert alert-warning">لا يوجد سجلات دفع للشهر المختار: ${MONTH_NAMES[month-1]} / ${year}.</div>`;
+
+            if (currentPayments.length > 0) {
+                const paidCount = currentPayments.filter(p => p.paid).length;
+                const debtorCount = currentPayments.length - paidCount;
+                const totalExpected = currentPayments.reduce((sum, p) => sum + p.finalAmount, 0);
+                const totalPaid = currentPayments.filter(p => p.paid).reduce((sum, p) => sum + p.finalAmount, 0);
+                const collectionRatio = totalExpected > 0 ? (totalPaid / totalExpected) * 100 : 0;
+                
+                summary = `
+                    <p>الشهر الحالي: <mark>${MONTH_NAMES[month-1]} / ${year}</mark></p>
+                    <div class="dashboard-cards" id="monthly-report-cards" style="margin-top: 10px;">
+                        <div class="card bg-info"><h4>عدد السجلات</h4><p>${currentPayments.length}</p></div>
+                        <div class="card bg-success"><h4>عدد الذين دفعوا</h4><p>${paidCount}</p></div>
+                        <div class="card bg-danger"><h4>عدد المتأخرين</h4><p>${debtorCount}</p></div>
+                        <div class="card bg-warning"><h4>نسبة التحصيل</h4><p>${collectionRatio.toFixed(1)}%</p></div>
+                    </div>
+                `;
+            }
+            document.getElementById('monthly-payment-summary').innerHTML = summary;
+
+            // يمكنك إضافة منطق للرسم البياني هنا إذا كان مطلوباً
         }
 
+        // --- 🌐 دوال الواجهة العامة ---------------------------------------------------------------------------------------------------------------------------------
+
+        /**
+         * @function showSection
+         * @description إظهار القسم المطلوب وإخفاء الأقسام الأخرى وتحديث حالة الـ Navbar.
+         * @param {string} sectionId - ID القسم المراد إظهاره.
+         * @param {HTMLElement} navItem - عنصر الـ Navbar الذي تم النقر عليه.
+         */
+        function showSection(sectionId, navItem) {
+            // إخفاء جميع الأقسام
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // إظهار القسم المطلوب
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+
+            // تحديث حالة الـ Navbar
+            document.querySelectorAll('.nav-item a').forEach(a => {
+                a.classList.remove('active');
+            });
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+
+            // إعادة عرض البيانات عند التبديل
+            if (sectionId === 'clients') {
+                renderClients();
+            } else if (sectionId === 'packages') {
+                renderPackages();
+            } else if (sectionId === 'groups') {
+                renderGroups();
+            } else if (sectionId === 'payments') {
+                renderPayments();
+            } else if (sectionId === 'debtors') {
+                renderDebtors();
+            } else if (sectionId === 'reports') {
+                renderReports();
+            }
+        }
+        
+        /**
+         * @function initializeInterface
+         * @description إعداد الواجهة بعد تسجيل الدخول.
+         */
+        function initializeInterface() {
+            // تهيئة حقول الشهر والسنة
+            const today = new Date();
+            const currentMonth = today.getMonth() + 1;
+            const currentYear = today.getFullYear();
+            
+            const lastMonth = localStorage.getItem(STORAGE_KEYS.LAST_MONTH) || currentMonth;
+            const lastYear = localStorage.getItem(STORAGE_KEYS.LAST_YEAR) || currentYear;
+
+            document.getElementById('payment-month').value = lastMonth;
+            document.getElementById('payment-year').value = lastYear;
+            
+            // تعبئة القوائم المنسدلة
+            populateClientPackageOptions();
+            populateClientGroupOptions();
+            
+            // عرض بيانات الأقسام المبدئية
+            renderClients();
+            renderPackages();
+            renderGroups();
+            renderPayments();
+        }
+
+        // --- 🚀 بدء تشغيل التطبيق ---------------------------------------------------------------------------------------------------------------------------------
+        
+        // 1. تهيئة البيانات الأساسية (كلمة السر والقوالب والبيانات الافتراضية)
+        initializeData();
+
+        // 2. التحقق من حالة تسجيل الدخول وبدء التشغيل
+        checkLoginStatus();
+
+        // 3. إذا كان المستخدم مسجلاً دخوله بالفعل، قم بتهيئة الواجهة.
+        if (getFromStorage(STORAGE_KEYS.LOGGED_IN, 'false') === 'true') {
+            initializeInterface();
+        }
+        
+        // --- End of JavaScript ---------------------------------------------------------------------------------------------------------------------------------------
     </script>
-
 </body>
 </html>
