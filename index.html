@@ -1469,7 +1469,7 @@
                     <td data-label="النهائي" style="font-weight: bold;">${record.finalAmount.toFixed(2)}</td>
                     <td data-label="تم الدفع؟">
                        <input type="checkbox" class="paid-checkbox" ${record.paid ? 'checked' : ''}
-                        onclick="confirmPaymentToggle(${record.id}, this)">
+                        onclick="confirmPaymentToggle(${record.id}, '${client.name}', this)">
 
                     </td>
                     <td data-label="ملاحظات">
@@ -1948,16 +1948,7 @@ function recalculatePaymentStats() {
   
 
 
-function confirmPaymentToggle(recordId, checkbox) {
-    const payments = getFromStorage(STORAGE_KEYS.PAYMENTS);
-    const record = payments.find(p => p.id === recordId);
-    if (!record) return;
-
-    const clients = getFromStorage(STORAGE_KEYS.CLIENTS)
-        .reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
-    const clientName = clients[record.clientId]?.name || 'العميل';
-
-    // الحالة الجديدة
+function confirmPaymentToggle(recordId, clientName, checkbox) {
     const isPaidNow = checkbox.checked;
 
     const message = isPaidNow
@@ -1967,12 +1958,11 @@ function confirmPaymentToggle(recordId, checkbox) {
     const confirmed = confirm(message);
 
     if (!confirmed) {
-        // رجّع الـ checkbox لحالته القديمة
+        // رجّع الحالة زي ما كانت
         checkbox.checked = !isPaidNow;
         return;
     }
 
-    // لو أكد
     updatePaymentRecord(recordId, 'paid', isPaidNow);
 }
 
