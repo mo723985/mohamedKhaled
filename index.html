@@ -1411,9 +1411,16 @@
             }
             
             payments[recordIndex] = record;
-            saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
-            renderPayments(); // إعادة عرض الجدول لتحديث النهائي والحالة
-            renderReports(); // تحديث التقارير
+        saveToStorage(STORAGE_KEYS.PAYMENTS, payments);
+
+           // تحديث الإحصائيات بس
+        recalculatePaymentStats();
+      renderDebtors();
+
+      if (document.getElementById('reports').style.display === 'block') {
+    renderReports();
+}
+
         }
 
         /**
@@ -1922,6 +1929,21 @@
             renderGroups();
             renderPayments();
         }
+function recalculatePaymentStats() {
+    const { month, year } = getPaymentEssentials();
+    const payments = getFromStorage(STORAGE_KEYS.PAYMENTS)
+        .filter(p => p.month === month && p.year === year);
+
+    let totalExpected = 0;
+    let totalPaid = 0;
+
+    payments.forEach(p => {
+        totalExpected += p.finalAmount;
+        if (p.paid) totalPaid += p.finalAmount;
+    });
+
+    updatePaymentStats(totalExpected, totalPaid);
+}
 
         // --- 🚀 بدء تشغيل التطبيق ---------------------------------------------------------------------------------------------------------------------------------
         
@@ -1940,3 +1962,4 @@
     </script>
 </body>
 </html>
+
